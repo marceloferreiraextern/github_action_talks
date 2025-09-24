@@ -1,0 +1,8 @@
+on:
+  workflow_call:
+
+jobs:
+  security:
+    uses: ./.github/workflows/templates/scan.yml
+    with:
+      image: ghcr.io/org/app:sha-${{ github.sha }}

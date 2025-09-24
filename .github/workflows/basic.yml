@@ -1,0 +1,22 @@
+on:
+  workflow_call:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact_name: ${{ steps.pkg.outputs.name }}
+      image_digest:  ${{ steps.img.outputs.digest }}
+    steps:
+      - id: pkg
+        run: echo "name=build-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - id: img
+        run: echo "digest=sha256:deadbeef..." >> "$GITHUB_OUTPUT"
+
+  verify:
+    needs: [compile]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Artifact:  ${{ needs.compile.outputs.artifact_name }}"
+          echo "ImageDigest: ${{ needs.compile.outputs.image_digest }}"

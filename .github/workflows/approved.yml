@@ -1,0 +1,11 @@
+on:
+  workflow_call:
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    environment:
+      name: production 
+      url: https://app.example.com
+    steps:
+      - run: echo approved!!!!

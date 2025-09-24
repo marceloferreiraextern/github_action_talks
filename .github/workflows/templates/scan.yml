@@ -1,0 +1,26 @@
+on:
+  workflow_call:
+    inputs:
+      image:
+        required: true
+        type: string
+    outputs:
+      report_url:
+        description: "Link to SARIF report"
+        value: ${{ jobs.scan.outputs.report_url }}
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    outputs:
+      report_url: ${{ steps.publish.outputs.url }}
+    steps:
+      - id: trivy
+        uses: aquasecurity/trivy-action@v0
+        with: 
+            image-ref: ${{ inputs.image }}
+            format: sarif
+            output: trivy.sarif 
+
+      - id: publish
+        run: echo "url=https://reports/${{ github.run_id }}/trivy.sarif" >> "$GITHUB_OUTPUT"
