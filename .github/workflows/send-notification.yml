@@ -1,0 +1,39 @@
+name: Reusable Notifier
+
+on:
+  workflow_dispatch:
+
+jobs:
+  notify_start:
+    uses: ./.github/workflows/reusable-slack-notify.yml
+    with:
+      status: 'in-progress'
+      channel-id: ${{ vars.SLACK_CHANNEL_ID }} 
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: notify_start
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run Deployment Script 🚀
+        run: |
+          echo "Starting deployment..."
+          sleep 15
+          # To test failure, uncomment the next line:
+          # exit 1
+          echo "Deployment finished."
+          
+  
+  notify_finish:
+    uses: ./.github/workflows/reusable-slack-notify.yml
+    if: always() 
+    needs: [notify_start, deploy]    
+    with:
+      status: ${{ needs.deploy.result }}
+      channel-id: ${{ vars.SLACK_CHANNEL_ID }} 
+      message-ts: ${{ needs.notify_start.outputs.message-ts }}
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

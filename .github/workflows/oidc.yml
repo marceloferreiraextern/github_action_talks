@@ -1,0 +1,23 @@
+name: 'Deploy na AWS com OIDC'
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: AWS via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::593426475352:role/GitHubAction-OIDC-Role
+          aws-region: eu-west-1
+
+      - name: List buckets on AWS
+        run: |
+          echo "✅ Auth ok!"
+          aws s3 ls

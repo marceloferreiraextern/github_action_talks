@@ -1,0 +1,70 @@
+name: Reusable Slack Notifier
+
+on:
+  workflow_call:
+    inputs:
+      status:
+        description: 'The status to report: in-progress, success, or failure'
+        required: true
+        type: string
+      channel-id:
+        description: 'The Slack Channel ID to post in'
+        required: true
+        type: string
+      message-ts:
+        description: 'The timestamp of the message to update (required for success/failure)'
+        required: false
+        type: string
+    outputs:
+      message-ts:
+        description: "The timestamp of the message that was sent"
+        value: ${{ jobs.notify.outputs.message-ts }}
+    secrets:
+      SLACK_BOT_TOKEN:
+        required: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    outputs:
+      message-ts: ${{ steps.send_or_update.outputs.message_ts }}
+    steps:
+      - name: Prepare Message Content
+        id: prepare_message
+        run: |
+          if [[ "${{ inputs.status }}" == "in-progress" ]]; then
+            JSON_PAYLOAD=$(cat <<EOF
+            {
+              "text": "⏳ Deployment in progress for `${{ github.repository }}`...",
+              "blocks": [{ "type": "section", "text": { "type": "mrkdwn", "text": "⏳ *Deployment in progress...*\n*Repository:* `${{ github.repository }}`\n*Commit:* <${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>" }}]
+            }
+          EOF
+          )
+          elif [[ "${{ inputs.status }}" == "success" ]]; then
+            JSON_PAYLOAD=$(cat <<EOF
+            {
+              "text": "✅ Deployment successful for `${{ github.repository }}`",
+              "blocks": [{ "type": "section", "text": { "type": "mrkdwn", "text": "✅ *Deployment Successful*\n*Repository:* `${{ github.repository }}`\n*Commit:* <${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>" }}]
+            }
+          EOF
+          )
+          else # failure
+            JSON_PAYLOAD=$(cat <<EOF
+            {
+              "text": "❌ Deployment failed for `${{ github.repository }}`",
+              "blocks": [{ "type": "section", "text": { "type": "mrkdwn", "text": "❌ *Deployment Failed*\n*Repository:* `${{ github.repository }}`\n*Commit:* <${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow Run>" }}]
+            }
+          EOF
+          )
+          fi
+          echo "payload=$JSON_PAYLOAD" >> $GITHUB_OUTPUT
+
+      - name: Send or Update Slack Message
+        id: send_or_update
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          channel-id: ${{ inputs.channel-id }}
+          message-ts: ${{ inputs.message-ts }} 
+          payload: ${{ steps.prepare_message.outputs.payload }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
