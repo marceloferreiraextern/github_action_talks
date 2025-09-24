@@ -3,6 +3,6 @@ on:
 
 jobs:
   security:
-    uses: ./.github/workflows/templates/scan.yml
+    uses: ./.github/workflows/scan.yml
     with:
       image: ghcr.io/org/app:sha-${{ github.sha }}
