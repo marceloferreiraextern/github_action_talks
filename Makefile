@@ -14,13 +14,7 @@ test: ## 🧪 Run the unit tests
 	@sleep 1
 	@echo "--> MOCK: All tests passed."
 
-deploy-staging: build ## 🚀 Deploy to the STAGING environment
-	@echo "--> MOCK: Deploying version $(VERSION) to STAGING..."
+deploy: build ## 🚀 DEPLOY TO PRODUCTION (requires confirmation)
+	@echo "--> MOCK: Deploying version $(VERSION) to $(type)..."
 	@sleep 2
-	@echo "--> MOCK: Staging deployment successful!"
-
-deploy-production: build ## 🚀 DEPLOY TO PRODUCTION (requires confirmation)
-	@read -p "Are you sure you want to deploy version $(VERSION) to PRODUCTION? [y/N] " confirm && [[ $$confirm == [yY] ]] || exit 1
-	@echo "--> MOCK: Deploying version $(VERSION) to PRODUCTION..."
-	@sleep 2
-	@echo "--> MOCK: Production deployment successful!"
+	@echo "--> MOCK: $(type) deployment successful!"
